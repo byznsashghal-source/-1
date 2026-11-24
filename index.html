@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة الإدارة الكاملة - الطالب الجامعي</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@600;700;800&family=Amiri:wght@700&family=Aref+Ruqaa:wght@400;700&family=Cairo:wght@500;600;700;800&family=Changa:wght@600;700;800&family=IBM+Plex+Sans+Arabic:wght@500;700&family=Lalezar&family=Marhey:wght@600;700&family=Noto+Kufi+Arabic:wght@600;700;800&family=Scheherazade+New:wght@600;700&family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+  <style>
+    :root {
+      --bg: #d9e8fc;
+      --bg-gradient: radial-gradient(circle at 12% 15%, rgba(56, 189, 248, 0.35), transparent 42%), radial-gradient(circle at 88% 82%, rgba(99, 102, 241, 0.28), transparent 45%), linear-gradient(155deg, #d7e6fb 0%, #eaf2fe 50%, #d3e7f8 100%);
+      --card: rgba(255, 255, 255, 0.58);
+      --surface-2: rgba(255, 255, 255, 0.74);
+      --border: rgba(255, 255, 255, 0.85);
+      --border-soft: rgba(15, 23, 42, 0.14);
+      --text: #0f172a;
+      --muted: #334155;
+      --primary: #2563eb;
+      --primary-2: #0284c7;
+      --accent: #059669;
+      --danger: #dc2626;
+      --gold: #d97706;
+      --card-shadow: 0 10px 0 rgba(15, 23, 42, 0.14), 0 18px 34px rgba(15, 23, 42, 0.14), inset 0 2px 0 rgba(255, 255, 255, 0.92);
+      --btn-shadow: 0 4px 0 rgba(15, 23, 42, 0.22), 0 10px 18px rgba(15, 23, 42, 0.14), inset 0 1.5px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    body.dark {
+      --bg: #060b16;
+      --bg-gradient: radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.2), transparent 42%), radial-gradient(circle at 85% 80%, rgba(139, 92, 246, 0.2), transparent 45%), linear-gradient(155deg, #050a14 0%, #0b1426 50%, #07101f 100%);
+      --card: rgba(17, 27, 46, 0.62);
+      --surface-2: rgba(22, 35, 58, 0.74);
+      --border: rgba(255, 255, 255, 0.22);
+      --border-soft: rgba(148, 163, 184, 0.2);
+      --text: #f1f5f9;
+      --muted: #cbd5e1;
+      --primary: #38bdf8;
+      --primary-2: #2563eb;
+      --accent: #34d399;
+      --danger: #f87171;
+      --gold: #f59e0b;
+      --card-shadow: 0 10px 0 #02050b, 0 18px 34px rgba(0, 0, 0, 0.65), inset 0 1.5px 0 rgba(255, 255, 255, 0.2);
+      --btn-shadow: 0 4px 0 #02050b, 0 10px 18px rgba(0, 0, 0, 0.55), inset 0 1.5px 0 rgba(255, 255, 255, 0.22);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+
+    body {
+      background-color: var(--bg);
+      background-image: var(--bg-gradient);
+      background-attachment: fixed;
+      color: var(--text);
+      min-height: 100vh;
+      padding: 14px 12px 80px;
+      overflow-x: hidden;
+    }
+
+    .glass-fx {
+      backdrop-filter: blur(20px) saturate(165%);
+      -webkit-backdrop-filter: blur(20px) saturate(165%);
+    }
+
+    .lock-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: var(--bg-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .lock-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 30px;
+      padding: 22px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .wrap { max-width: 1140px; margin: 0 auto; display: none; }
+    .wrap.unlocked { display: block; }
+
+    .topbar {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 30px;
+      padding: 15px 18px;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 13px;
+      border-radius: 99px;
+      background: var(--surface-2);
+      border: 1.5px solid var(--border);
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: var(--btn-shadow);
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; }
+    .dot.live { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.9); }
+
+    .tabs-bar {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 9px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 900px) { .tabs-bar { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 540px) { .tabs-bar { grid-template-columns: repeat(2, 1fr); } }
+
+    .tab-btn {
+      padding: 10px 8px;
+      border-radius: 21px;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: var(--btn-shadow);
+      transition: transform 0.15s ease;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(145deg, var(--primary), var(--primary-2));
+      color: #fff;
+      transform: translate3d(0, -3px, 0);
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; animation: panelSmoothIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+    @keyframes panelSmoothIn {
+      0% { opacity: 0.1; transform: translate3d(0, 8px, 0); }
+      100% { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 28px;
+      padding: 16px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 15px;
+    }
+
+    .card h3 { font-size: 17.5px; font-weight: 800; margin-bottom: 10px; }
+
+    .form-group { margin-bottom: 11px; }
+    .form-group label { display: block; font-size: 13.5px; font-weight: 800; margin-bottom: 4px; }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1.5px solid var(--border-soft);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 14.5px;
+      outline: none;
+    }
+
+    textarea.form-control { min-height: 88px; resize: vertical; }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 11px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; }
+    @media (max-width: 720px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    .btn {
+      padding: 9px 13px;
+      border-radius: 17px;
+      border: 1.5px solid rgba(255, 255, 255, 0.45);
+      background: linear-gradient(145deg, var(--primary), var(--primary-2));
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: var(--btn-shadow);
+      transition: transform 0.14s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      text-decoration: none;
+    }
+
+    .btn:active { transform: translate3d(0, 2px, 0); }
+    .btn-wa { background: linear-gradient(145deg, #15803d, #059669); }
+    .btn-danger { background: linear-gradient(145deg, #b91c1c, #dc2626); }
+    .btn-gold { background: linear-gradient(145deg, #d97706, #eab308); color: #0f172a; }
+    .btn-edit { background: linear-gradient(145deg, #0284c7, #2563eb); color: #fff; }
+    .btn-outline { background: var(--surface-2); color: var(--text); border: 1.5px solid var(--border); }
+
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 19px;
+      background: var(--surface-2);
+      border: 1.5px solid var(--border);
+      margin-bottom: 12px;
+      font-weight: 800;
+    }
+
+    .list-box {
+      background: var(--surface-2);
+      border: 1.5px solid var(--border);
+      border-radius: 22px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: var(--btn-shadow);
+    }
+
+    .subject-clickable { cursor: pointer; transition: transform 0.15s ease; }
+    .subject-clickable:hover { transform: translate3d(0, -2px, 0); }
+
+    .row-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .row-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+    .inline-edit-box {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1.5px dashed var(--border-soft);
+      display: none;
+    }
+
+    .inline-edit-box.open { display: block; }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 7px 14px;
+      background: var(--card);
+      border: 1px solid var(--border-soft);
+      border-radius: 16px;
+      padding: 10px 12px;
+      font-size: 13.5px;
+      margin: 8px 0 10px;
+    }
+
+    @media (max-width: 600px) { .detail-grid { grid-template-columns: 1fr; } }
+
+    .order-item-row {
+      background: var(--card);
+      border: 1.5px solid var(--border-soft);
+      border-radius: 16px;
+      padding: 12px;
+      margin-top: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .order-item-row + .order-item-row {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 2px dashed var(--border-soft);
+    }
+
+    .solution-divider-box {
+      margin-top: 4px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border-soft);
+      display: grid;
+      gap: 6px;
+    }
+
+    .badge-pro {
+      display: inline-block;
+      background: linear-gradient(145deg, #f59e0b, #eab308);
+      color: #0f172a;
+      padding: 2px 8px;
+      border-radius: 9px;
+      font-size: 11.5px;
+      font-weight: 800;
+    }
+
+    .codes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 9px;
+      max-height: 410px;
+      overflow-y: auto;
+      padding: 4px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 680px) { .codes-grid { grid-template-columns: 1fr; } }
+
+    .transitions-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+    }
+
+    @media (max-width: 780px) { .transitions-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .transitions-grid { grid-template-columns: 1fr; } }
+
+    .trans-card {
+      background: var(--surface-2);
+      border: 1.5px solid var(--border);
+      border-radius: 19px;
+      padding: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: var(--btn-shadow);
+    }
+
+    .trans-card.selected {
+      background: linear-gradient(145deg, var(--primary), var(--primary-2));
+      color: #fff;
+    }
+
+    .logo-preview-box {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      background: linear-gradient(145deg, var(--primary), var(--primary-2));
+      border: 2px solid var(--border);
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      color: #fff;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .logo-preview-box img { width: 100%; height: 100%; object-fit: cover; }
+
+    .toast {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      transform: translate3d(-50%, -150%, 0);
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-right: 4px solid var(--accent);
+      color: var(--text);
+      padding: 10px 18px;
+      border-radius: 22px;
+      font-weight: 800;
+      box-shadow: var(--card-shadow);
+      z-index: 600;
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+    }
+
+    .toast.show { transform: translate3d(-50%, 0, 0); }
+    .hint-vars { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.7; }
+    .err-msg { color: var(--danger); font-size: 13.5px; font-weight: 800; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="toast glass-fx" id="adminToast"></div>
+
+  <!-- ADMIN PASSWORD LOCK -->
+  <div class="lock-overlay" id="adminLockScreen">
+    <div class="lock-card glass-fx">
+      <h2 style="font-size:21px; font-weight:800; margin-bottom:6px;">🔐 دخول لوحة الإدارة</h2>
+      <p style="font-size:13.5px; color:var(--muted); margin-bottom:14px;">أدخل كلمة مرور لوحة الإدارة للوصول إلى جميع الإعدادات.</p>
+      <form id="adminUnlockForm">
+        <div class="form-group">
+          <label>كلمة المرور</label>
+          <div style="display:flex; gap:8px;">
+            <input type="password" class="form-control" id="adminPassInput" required />
+            <button type="button" class="btn btn-outline" onclick="togglePassVisibility('adminPassInput')">👁️</button>
+          </div>
+        </div>
+        <button type="submit" class="btn" style="width:100%;">دخول اللوحة</button>
+        <div class="err-msg" id="adminUnlockError"></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="wrap" id="adminMainWrap">
+    <header class="topbar glass-fx">
+      <div>
+        <h1 style="font-size:21px; font-weight:800;">🛠️ لوحة الإدارة الكاملة - الطالب الجامعي</h1>
+        <p style="font-size:13px; color:var(--muted);">متصل فعلياً + شيك واحد لكل طالب وطلب + بيانات الطلاب + الاشتراك + طرق الدفع + الإعدادات</p>
+      </div>
+      <div class="row-actions">
+        <span class="status-pill" id="fbSyncBadge">
+          <span class="dot" id="fbSyncDot"></span>
+          <span id="fbSyncLabel">Firebase متصل</span>
+        </span>
+        <span class="status-pill">
+          <span class="dot live"></span>
+          <span>متصل الآن: <strong id="realOnlineCountBadge" style="color:var(--accent);">0</strong></span>
+        </span>
+        <button type="button" class="btn btn-outline" onclick="toggleAdminTheme()">🌓 المظهر</button>
+        <button type="button" class="btn btn-outline" onclick="lockAdminPanel()">🔒 قفل</button>
+        <a href="index.html" class="btn">🏠 فتح الموقع</a>
+      </div>
+    </header>
+
+    <div class="tabs-bar">
+      <button type="button" class="tab-btn active" data-tab="ordersTab" onclick="switchAdminTab('ordersTab')">📦 الطلبات والمتصلين</button>
+      <button type="button" class="tab-btn" data-tab="subjectsTab" onclick="switchAdminTab('subjectsTab')">🗂️ المواد وأقسامها</button>
+      <button type="button" class="tab-btn" data-tab="catalogTab" onclick="switchAdminTab('catalogTab')">📚 محتوى المواد</button>
+      <button type="button" class="tab-btn" data-tab="studentsTab" onclick="switchAdminTab('studentsTab')">🪪 بيانات الطلاب</button>
+      <button type="button" class="tab-btn" data-tab="subscriptionTab" onclick="switchAdminTab('subscriptionTab')">👑 الاشتراك</button>
+      <button type="button" class="tab-btn" data-tab="paymentsTab" onclick="switchAdminTab('paymentsTab')">💳 طرق الدفع</button>
+      <button type="button" class="tab-btn" data-tab="whatsappTab" onclick="switchAdminTab('whatsappTab')">📲 إعداد الواتس</button>
+      <button type="button" class="tab-btn" data-tab="themesTab" onclick="switchAdminTab('themesTab')">💎 الثيمات الزجاجية</button>
+      <button type="button" class="tab-btn" data-tab="transitionsTab" onclick="switchAdminTab('transitionsTab')">✨ العناصر الانتقالية</button>
+      <button type="button" class="tab-btn" data-tab="settingsTab" onclick="switchAdminTab('settingsTab')">⚙️ الإعدادات</button>
+    </div>
+
+    <!-- 1. ORDERS & REAL ONLINE USERS -->
+    <section id="ordersTab" class="panel active">
+      <div class="card glass-fx">
+        <div class="row-head" style="margin-bottom:8px;">
+          <h3 style="margin:0;">🟢 المتصلون الفعليون الآن (<span id="realOnlinePanelNum">0</span>)</h3>
+          <button type="button" class="btn btn-outline" onclick="cleanupStalePresence()">🔄 تحديث</button>
+        </div>
+        <div id="realOnlineUsersList" style="font-size:13.5px; color:var(--muted);"></div>
+      </div>
+
+      <div class="card glass-fx">
+        <div class="row-head" style="margin-bottom:10px;">
+          <h3 style="margin:0;">📦 الطلبات (ترقيم مجمع 1، 2، 3... وفواصل واضحة بين كل طلب وحل)</h3>
+          <button type="button" class="btn btn-danger" onclick="clearAllOrdersAdmin()">🗑️ إفراغ الطلبات</button>
+        </div>
+        <div id="adminOrdersList"></div>
+      </div>
+    </section>
+
+    <!-- 2. SUBJECTS & PER-SUBJECT SECTIONS -->
+    <section id="subjectsTab" class="panel">
+      <div id="subjectsOverviewPage">
+        <div class="card glass-fx">
+          <h3>➕ إضافة مادة دراسية جديدة</h3>
+          <div class="grid-3">
+            <div class="form-group"><label>اسم المادة</label><input type="text" class="form-control" id="newSubName" /></div>
+            <div class="form-group"><label>أيقونة المادة</label><input type="text" class="form-control" id="newSubIcon" value="📘" /></div>
+            <div class="form-group"><label>لون المادة</label><input type="color" class="form-control" id="newSubColor" value="#2563eb" style="height:44px; padding:4px;" /></div>
+          </div>
+          <div class="form-group"><label>وصف المادة</label><input type="text" class="form-control" id="newSubDesc" /></div>
+          <button type="button" class="btn btn-wa" onclick="addSubjectAdmin()">➕ إضافة المادة</button>
+        </div>
+
+        <div class="card glass-fx">
+          <h3>➕ إضافة قسم جديد وتحديد المادة التي يظهر فيها</h3>
+          <div class="grid-2">
+            <div class="form-group"><label>اختر المادة</label><select class="form-control" id="quickAddSecTargetSubject"></select></div>
+            <div class="form-group"><label>اسم القسم</label><input type="text" class="form-control" id="quickAddSecTitle" /></div>
+          </div>
+          <div class="grid-3">
+            <div class="form-group">
+              <label>نوع المحتوى</label>
+              <select class="form-control" id="quickAddSecType">
+                <option value="summaries">ملخصات (روابط)</option>
+                <option value="text_note">نص / شرح</option>
+                <option value="purchasable">تكاليف (شنطة)</option>
+                <option value="direct_link">لينك مباشر</option>
+                <option value="exams">حل اختبارات التكوين</option>
+                <option value="research">بحث مطلوب</option>
+              </select>
+            </div>
+            <div class="form-group"><label>الأيقونة</label><input type="text" class="form-control" id="quickAddSecIcon" value="📂" /></div>
+            <div class="form-group"><label>وصف مختصر</label><input type="text" class="form-control" id="quickAddSecHint" /></div>
+          </div>
+          <button type="button" class="btn" onclick="addSectionToTargetSubject('quickAddSecTargetSubject', 'quickAddSecTitle', 'quickAddSecType', 'quickAddSecIcon', 'quickAddSecHint')">➕ إضافة القسم</button>
+        </div>
+
+        <div class="card glass-fx">
+          <h3>📚 المواد الدراسية (اضغط على أي مادة لفتح صفحتها الخاصة وإدارة أقسامها)</h3>
+          <div id="adminSubjectsList"></div>
+        </div>
+      </div>
+
+      <div id="singleSubjectManagePage" style="display:none;">
+        <div class="card glass-fx">
+          <div class="row-head" style="margin-bottom:12px;">
+            <button type="button" class="btn btn-outline" onclick="closeSubjectManagePage()">⬅ رجوع لكل المواد</button>
+            <span style="font-size:13.5px; font-weight:800; color:var(--primary);" id="managingSubjectBadge"></span>
+          </div>
+          <h3>✏️ تعديل بيانات المادة</h3>
+          <div class="grid-3">
+            <div class="form-group"><label>اسم المادة</label><input type="text" class="form-control" id="singleSubEditName" /></div>
+            <div class="form-group"><label>أيقونة المادة</label><input type="text" class="form-control" id="singleSubEditIcon" /></div>
+            <div class="form-group"><label>لون المادة</label><input type="color" class="form-control" id="singleSubEditColor" style="height:44px; padding:4px;" /></div>
+          </div>
+          <div class="form-group"><label>وصف المادة</label><input type="text" class="form-control" id="singleSubEditDesc" /></div>
+          <div class="row-actions">
+            <button type="button" class="btn btn-wa" onclick="saveSingleSubjectDetails()">💾 حفظ تعديلات المادة</button>
+            <button type="button" class="btn btn-danger" onclick="deleteCurrentManagedSubject()">🗑️ حذف المادة</button>
+          </div>
+        </div>
+
+        <div class="card glass-fx">
+          <h3>➕ إضافة قسم جديد داخل هذه المادة أو مادة أخرى</h3>
+          <div class="grid-2">
+            <div class="form-group"><label>المادة</label><select class="form-control" id="singleSubTargetSelect"></select></div>
+            <div class="form-group"><label>اسم القسم</label><input type="text" class="form-control" id="singleSubNewSecTitle" /></div>
+          </div>
+          <div class="grid-3">
+            <div class="form-group">
+              <label>نوع المحتوى</label>
+              <select class="form-control" id="singleSubNewSecType">
+                <option value="summaries">ملخصات</option>
+                <option value="text_note">نص</option>
+                <option value="purchasable">تكاليف</option>
+                <option value="direct_link">لينك</option>
+                <option value="exams">حل اختبارات التكوين</option>
+                <option value="research">بحث مطلوب</option>
+              </select>
+            </div>
+            <div class="form-group"><label>الأيقونة</label><input type="text" class="form-control" id="singleSubNewSecIcon" value="📑" /></div>
+            <div class="form-group"><label>وصف مختصر</label><input type="text" class="form-control" id="singleSubNewSecHint" /></div>
+          </div>
+          <button type="button" class="btn" onclick="addSectionToTargetSubject('singleSubTargetSelect', 'singleSubNewSecTitle', 'singleSubNewSecType', 'singleSubNewSecIcon', 'singleSubNewSecHint')">➕ إضافة القسم</button>
+        </div>
+
+        <div class="card glass-fx">
+          <h3>📂 أقسام هذه المادة (مع زر ✏️ تعديل وحذف لكل قسم)</h3>
+          <div id="singleSubjectSectionsList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. CATALOG ITEMS -->
+    <section id="catalogTab" class="panel">
+      <div class="card glass-fx">
+        <h3>➕ إضافة عنصر داخل مادة وقسم</h3>
+        <div class="grid-2">
+          <div class="form-group"><label>المادة</label><select class="form-control" id="itemSubjectSelect"></select></div>
+          <div class="form-group"><label>القسم</label><select class="form-control" id="itemSectionSelect"></select></div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label>العنوان</label><input type="text" class="form-control" id="itemTitleInput" /></div>
+          <div class="form-group"><label>السعر بالجنيه</label><input type="number" min="0" class="form-control" id="itemPriceInput" value="50" /></div>
+        </div>
+        <div class="form-group"><label>المحتوى (رابط / نص / وصف)</label><textarea class="form-control" id="itemDescInput"></textarea></div>
+        <div class="form-group"><label>النصف الثاني لاختبار التكوين (Pro 👑)</label><textarea class="form-control" id="itemPart2Input"></textarea></div>
+        <button type="button" class="btn btn-wa" onclick="addCatalogItem()">✅ إضافة العنصر</button>
+      </div>
+      <div class="card glass-fx">
+        <h3>📋 عناصر القسم المختار (مع زر ✏️ تعديل وحذف)</h3>
+        <div id="adminCatalogList"></div>
+      </div>
+    </section>
+
+    <!-- 4. STUDENTS DATA (SINGLE CARD PER STUDENT WITH FULL DETAILS) -->
+    <section id="studentsTab" class="panel">
+      <div class="card glass-fx">
+        <h3>🪪 بيانات الطلاب المسجلين بالتفصيل (كارت واحد لكل طالب محدث لحظياً)</h3>
+        <div id="adminStudentsList"></div>
+      </div>
+    </section>
+
+    <!-- 5. SUBSCRIPTION SECTION -->
+    <section id="subscriptionTab" class="panel">
+      <div class="card glass-fx">
+        <h3>👑 قسم الاشتراك وأكواد التفعيل</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>سعر الاشتراك بالجنيه</label>
+            <div style="display:flex; gap:8px;">
+              <input type="number" min="1" class="form-control" id="subPriceInput" />
+              <button type="button" class="btn" onclick="saveSubPriceAdmin()">💾 حفظ السعر</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>إضافة كود اشتراك جديد</label>
+            <div style="display:flex; gap:8px;">
+              <input type="text" class="form-control" id="newSubCodeInput" placeholder="مثال: PRO-2026-VIP" />
+              <button type="button" class="btn btn-gold" onclick="addSubscriptionCodeAdmin()">➕ إضافة كود</button>
+            </div>
+          </div>
+        </div>
+        <div id="adminSubCodesSummary" class="hint-vars"></div>
+        <div class="codes-grid" id="adminSubCodesList"></div>
+      </div>
+    </section>
+
+    <!-- 6. PAYMENT METHODS SECTION -->
+    <section id="paymentsTab" class="panel">
+      <div class="card glass-fx">
+        <h3>➕ إضافة طريقة دفع جديدة للموقع</h3>
+        <div class="grid-3">
+          <div class="form-group"><label>اسم طريقة الدفع</label><input type="text" class="form-control" id="newPayLabelInput" placeholder="مثال: تلدا / محفظة إلكترونية" /></div>
+          <div class="form-group"><label>الأيقونة</label><input type="text" class="form-control" id="newPayIconInput" value="💳" /></div>
+          <div class="form-group"><label>الرقم أو الحساب</label><input type="text" class="form-control" id="newPayAccountInput" placeholder="01105588499" /></div>
+        </div>
+        <button type="button" class="btn btn-wa" onclick="addPaymentMethodAdmin()">➕ إضافة طريقة الدفع</button>
+      </div>
+
+      <div class="card glass-fx">
+        <h3>💳 طرق الدفع المفعلة في الموقع (مع زر ✏️ تعديل وحذف)</h3>
+        <div id="adminPaymentMethodsList"></div>
+        <div class="form-group" style="margin-top:12px;">
+          <label>ملاحظة عامة للدفع تظهر للطلاب في الشنطة</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" class="form-control" id="payGeneralNoteInput" />
+            <button type="button" class="btn" onclick="savePaymentNoteAdmin()">💾 حفظ الملاحظة</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. WHATSAPP -->
+    <section id="whatsappTab" class="panel">
+      <div class="card glass-fx">
+        <h3>📲 إعداد الواتس وتحويل الطلبات</h3>
+        <div class="switch-row">
+          <div>
+            <div>تشغيل أو إيقاف تحويل الطلبات إلى واتساب</div>
+            <div style="font-size:12.5px; color:var(--muted); font-weight:600;">عند الإيقاف يتم تسجيل الطلب في المنصة فقط</div>
+          </div>
+          <input type="checkbox" id="waEnabledInput" style="width:22px; height:22px; cursor:pointer;" />
+        </div>
+        <div class="form-group"><label>رقم الواتساب المستقبِل</label><input type="text" class="form-control" id="waPhoneInput" /></div>
+        <div class="form-group">
+          <label>قالب رسالة الواتساب</label>
+          <textarea class="form-control" id="waTemplateInput" style="min-height:140px;"></textarea>
+          <div class="hint-vars">المتغيرات: <code>{brand}</code>، <code>{student_name}</code>، <code>{student_year}</code>، <code>{student_card}</code>، <code>{student_phone}</code>، <code>{payment_method}</code>، <code>{total}</code>، <code>{items_count}</code>، <code>{order_id}</code>، <code>{items}</code></div>
+        </div>
+        <button type="button" class="btn btn-wa" onclick="saveWhatsappSettings()">💾 حفظ إعدادات الواتس</button>
+      </div>
+    </section>
+
+    <!-- 8. GLASS THEMES -->
+    <section id="themesTab" class="panel">
+      <div class="card glass-fx">
+        <h3>💎 الثيمات الزجاجية الشفافة والخطوط</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>الثيم الزجاجي الشفاف</label>
+            <select class="form-control" id="appearanceThemeSelect">
+              <option value="glass-crystal-blue">1. كريستال أزرق زجاجي شفاف</option>
+              <option value="glass-aqua-mint">2. زجاجي نعناعي شفاف</option>
+              <option value="glass-royal-amethyst">3. زجاجي جمشت بنفسجي شفاف</option>
+              <option value="glass-rose-pearl">4. زجاجي لؤلؤي وردي شفاف</option>
+              <option value="glass-sunset-gold">5. زجاجي ذهبي دافئ شفاف</option>
+              <option value="glass-emerald-mist">6. زجاجي زمردي ضبابي شفاف</option>
+              <option value="glass-sky-frost">7. زجاجي سماوي ثلجي شفاف</option>
+              <option value="glass-indigo-aurora">8. زجاجي نيلي شفق قطبي شفاف</option>
+              <option value="glass-coral-breeze">9. زجاجي مرجاني شفاف</option>
+              <option value="glass-teal-lagoon">10. زجاجي بحيرة فيروزية شفاف</option>
+              <option value="glass-lavender-silk">11. زجاجي لافندر حريري شفاف</option>
+              <option value="glass-sapphire-ice">12. زجاجي ياقوتي جليدي شفاف</option>
+              <option value="glass-ruby-glow">13. زجاجي ياقوت أحمر شفاف</option>
+              <option value="glass-jade-glass">14. زجاجي يشب أخضر شفاف</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>الخط</label>
+            <select class="form-control" id="appearanceFontSelect">
+              <option value="cairo">Cairo (الخط الأصلي)</option>
+              <option value="amiri">Amiri</option>
+              <option value="tajawal">Tajawal</option>
+              <option value="alexandria">Alexandria</option>
+              <option value="aref_ruqaa">Aref Ruqaa</option>
+              <option value="noto_kufi">Noto Kufi</option>
+              <option value="scheherazade">Scheherazade New</option>
+              <option value="ibm_plex">IBM Plex Sans Arabic</option>
+              <option value="changa">Changa</option>
+              <option value="lalezar">Lalezar</option>
+              <option value="marhey">Marhey</option>
+            </select>
+          </div>
+        </div>
+        <div class="row-actions">
+          <button type="button" class="btn btn-wa" onclick="saveAppearanceAdmin()">💾 حفظ الثيم والخط</button>
+          <button type="button" class="btn btn-outline" onclick="resetOriginalFontAdmin()">↩️ إرجاع الخط الأصلي</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. TRANSITIONS (+55) -->
+    <section id="transitionsTab" class="panel">
+      <div class="card glass-fx">
+        <h3>✨ العناصر الانتقالية للموقع (56 تأثير انتقالي)</h3>
+        <div class="transitions-grid" id="transitionsGrid"></div>
+      </div>
+    </section>
+
+    <!-- 10. SETTINGS (LOGO, PASSWORD, ADS, SUPPORT) -->
+    <section id="settingsTab" class="panel">
+      <div class="card glass-fx">
+        <h3>⚙️ الإعدادات العامة: التحكم في اللوجو وكلمة السر والهوية</h3>
+        <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+          <div class="logo-preview-box" id="adminLogoPreviewBox">🎓</div>
+          <div style="flex:1;">
+            <div class="form-group" style="margin-bottom:6px;">
+              <label>أيقونة / نص اللوجو</label>
+              <input type="text" class="form-control" id="brandLogoTextInput" oninput="updateLogoPreview()" />
+            </div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label>رابط صورة اللوجو (اختياري - URL)</label><input type="url" class="form-control" id="brandLogoImgInput" placeholder="https://..." oninput="updateLogoPreview()" /></div>
+          <div class="form-group"><label>اسم المنصة</label><input type="text" class="form-control" id="brandNameInput" /></div>
+        </div>
+        <button type="button" class="btn btn-wa" style="margin-bottom:14px;" onclick="saveLogoAndBrandAdmin()">💾 حفظ اللوجو واسم المنصة</button>
+
+        <div class="form-group" style="padding-top:12px; border-top:1.5px dashed var(--border-soft);">
+          <label>🔑 تغيير كلمة مرور لوحة الإدارة</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" class="form-control" id="newAdminPassInput" placeholder="كلمة المرور الجديدة للإدارة" />
+            <button type="button" class="btn btn-gold" onclick="changeAdminPassword()">حفظ كلمة السر</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card glass-fx">
+        <h3>📢 الإعلانات (مع ✏️ تعديل وحذف)</h3>
+        <div class="grid-2">
+          <div class="form-group"><label>الشارة</label><input type="text" class="form-control" id="adBadgeInput" /></div>
+          <div class="form-group"><label>العنوان</label><input type="text" class="form-control" id="adTitleInput" /></div>
+        </div>
+        <div class="form-group"><label>النص</label><textarea class="form-control" id="adBodyInput"></textarea></div>
+        <button type="button" class="btn btn-wa" onclick="addAdAdmin()">➕ إضافة إعلان</button>
+        <div id="adminAdsList" style="margin-top:12px;"></div>
+      </div>
+
+      <div class="card glass-fx">
+        <h3>🎧 روابط الدعم الفني (مع ✏️ تعديل وحذف)</h3>
+        <div class="grid-2">
+          <div class="form-group"><label>اسم الرابط</label><input type="text" class="form-control" id="supLabelInput" /></div>
+          <div class="form-group"><label>الرابط</label><input type="url" class="form-control" id="supUrlInput" /></div>
+        </div>
+        <button type="button" class="btn" onclick="addSupportLinkAdmin()">➕ إضافة رابط</button>
+        <div id="adminSupportList" style="margin-top:12px;"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const DEFAULT_ADMIN_PASS = "AZ##01040428382##az";
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAhwQd89qRRmlBQQWthack6SjB56013ba4",
+      authDomain: "lkk33-3daaf.firebaseapp.com",
+      databaseURL: "https://lkk33-3daaf-default-rtdb.firebaseio.com",
+      projectId: "lkk33-3daaf",
+      storageBucket: "lkk33-3daaf.firebasestorage.app",
+      messagingSenderId: "634924398214",
+      appId: "1:634924398214:web:e851a573a807e9e3144307",
+      measurementId: "G-XYMWT4VMG6"
+    };
+
+    const STORAGE_KEYS = {
+      ADMIN_PASS: "edu_platform_admin_pass_v1",
+      ADMIN_AUTH_SESSION: "edu_platform_admin_unlocked_v1",
+      ACTIVE_STUDENT: "edu_platform_active_student_v1",
+      STUDENTS_DB: "edu_platform_students_db_v1",
+      SUBJECTS: "edu_platform_subjects_v1",
+      SECTIONS: "edu_platform_sections_v1",
+      SUBJECT_SECTIONS: "edu_platform_subject_sections_v1",
+      CATALOG: "edu_platform_catalog_v2",
+      ORDERS: "edu_platform_orders_v1",
+      ADS: "edu_platform_ads_v1",
+      SUPPORT: "edu_platform_support_links_v1",
+      BRAND: "edu_platform_brand_v1",
+      PAYMENTS: "edu_platform_payment_details_v1",
+      PAYMENT_METHODS: "edu_platform_payment_methods_v1",
+      APPEARANCE: "edu_platform_appearance_v1",
+      TRANSITION: "edu_platform_transition_v1",
+      SUBSCRIPTION: "edu_platform_subscription_v1",
+      WHATSAPP_CFG: "edu_platform_whatsapp_cfg_v1",
+      THEME: "edu_platform_theme_v3"
+    };
+
+    const DEFAULT_PAYMENT_METHODS = [
+      { id: "vodafone_cash", label: "فودافون كاش (Vodafone Cash)", icon: "📱", account: "01105588499" },
+      { id: "instapay", label: "إنستاباي (InstaPay)", icon: "⚡", account: "01105588499" },
+      { id: "orange_cash", label: "أورانج كاش (Orange Cash)", icon: "🟠", account: "01105588499" },
+      { id: "etisalat_cash", label: "اتصالات كاش (e& Cash)", icon: "🟢", account: "01105588499" },
+      { id: "we_pay", label: "وي باي (WE Pay)", icon: "🟣", account: "01105588499" },
+      { id: "fawry_meeza", label: "فوري / كروت ميزة", icon: "🧾", account: "متاح عبر المنفذ" },
+      { id: "bank_transfer", label: "تحويل بنكي", icon: "🏦", account: "حساب بنكي معتمد" },
+      { id: "cash_on_delivery", label: "دفع نقدي / كاش", icon: "💵", account: "عند التسليم" }
+    ];
+
+    const TRANSITION_EFFECTS = Array.from({ length: 56 }, (_, i) => ({
+      id: "tr-" + String(i + 1).padStart(2, "0"),
+      name: `تأثير انتقالي رقم ${i + 1}`
+    }));
+
+    const DEFAULT_SUBJECTS = [
+      { id: "acc", name: "مبادئ المحاسبة المالية", icon: "📊", color: "#2563eb", desc: "القوائم المالية، قيود اليومية، ميزان المراجعة، والتسويات الجردية." },
+      { id: "law", name: "مبادئ القانون", icon: "⚖️", color: "#0d9488", desc: "نظرية القانون، القاعدة القانونية، مصادر القانون، ونظرية الحق." },
+      { id: "eco", name: "مبادئ الاقتصاد", icon: "📈", color: "#7c3aed", desc: "المشكلة الاقتصادية، العرض والطلب، المرونات، وسلوك المستهلك." },
+      { id: "mgt", name: "مبادئ إدارة الأعمال", icon: "💼", color: "#ea580c", desc: "وظائف الإدارة: التخطيط، التنظيم، التوجيه، والرقابة وتطور الفكر الإداري." },
+      { id: "eng", name: "لغة أجنبية", icon: "🌐", color: "#db2777", desc: "المصطلحات الإدارية والتجارية باللغة الإنجليزية وقواعد الفهم والترجمة." }
+    ];
+
+    const DEFAULT_SECTIONS = [
+      { id: "assignments", title: "حل تكاليف", icon: "📝", hint: "حل تكاليف المادة والأسعار والإضافة للشنطة", type: "purchasable" },
+      { id: "summaries", title: "ملخصات المادة", icon: "🔗", hint: "لينكات ملخصات المادة المجانية", type: "summaries" },
+      { id: "exams", title: "حل اختبارات التكوين", icon: "📄", hint: "حل اختبارات التكوين (النصف الثاني لـ Pro)", type: "exams" },
+      { id: "researches", title: "الاشتراك في البحث المطلوب", icon: "📚", hint: "الاشتراك في البحث المطلوب والانتقال للشنطة", type: "research" }
+    ];
+
+    const SECTION_TYPE_LABELS = {
+      summaries: "ملخصات (روابط)",
+      text_note: "نص / شرح",
+      purchasable: "تكاليف (شنطة)",
+      direct_link: "لينك مباشر",
+      exams: "حل اختبارات التكوين",
+      research: "بحث مطلوب"
+    };
+
+    const DEFAULT_WHATSAPP_CFG = {
+      whatsappEnabled: true,
+      phone: "201105588499",
+      template: [
+        "📋 *طلب جديد من منصة {brand}*",
+        "━━━━━━━━━━━━━━━",
+        "👤 *بيانات الطالب:*",
+        "• الاسم: {student_name}",
+        "• الفرقة: {student_year}",
+        "• رقم الكارنيه: {student_card}",
+        "• رقم الهاتف: {student_phone}",
+        "━━━━━━━━━━━━━━━",
+        "🛍️ *عناصر الأوردر ({items_count}):*",
+        "{items}",
+        "━━━━━━━━━━━━━━━",
+        "💳 *طريقة الدفع:* {payment_method}",
+        "💰 *الإجمالي المطلوب:* {total} جنيه",
+        "🆔 *رقم الأوردر:* {order_id}"
+      ].join("\n")
+    };
+
+    const STAGES = ["تم الإرسال", "قيد المراجعة", "جاري التجهيز", "مكتمل"];
+    let dbRef = null;
+    let managedSubjectId = "";
+    let livePresenceMap = {};
+
+    function safeParse(raw, fb) { try { return raw ? JSON.parse(raw) : fb; } catch (_) { return fb; } }
+    function showAdminToast(msg) {
+      const el = document.getElementById("adminToast");
+      el.textContent = msg; el.classList.add("show");
+      clearTimeout(window._t);
+      window._t = setTimeout(() => el.classList.remove("show"), 2200);
+    }
+
+    function togglePassVisibility(inputId) {
+      const el = document.getElementById(inputId);
+      if (el) el.type = el.type === "password" ? "text" : "password";
+    }
+
+    function getAdminPassword() {
+      const saved = localStorage.getItem(STORAGE_KEYS.ADMIN_PASS);
+      return saved && saved.trim() ? saved.trim() : DEFAULT_ADMIN_PASS;
+    }
+
+    function applyAdminUnlockedState(unlocked) {
+      document.getElementById("adminLockScreen").style.display = unlocked ? "none" : "flex";
+      document.getElementById("adminMainWrap").classList.toggle("unlocked", unlocked);
+    }
+
+    document.getElementById("adminUnlockForm").onsubmit = (e) => {
+      e.preventDefault();
+      if (document.getElementById("adminPassInput").value.trim() === getAdminPassword()) {
+        sessionStorage.setItem(STORAGE_KEYS.ADMIN_AUTH_SESSION, "1");
+        document.getElementById("adminUnlockError").textContent = "";
+        applyAdminUnlockedState(true);
+        showAdminToast("تم فتح لوحة الإدارة ✅");
+      } else {
+        document.getElementById("adminUnlockError").textContent = "❌ كلمة المرور غير صحيحة.";
+      }
+    };
+
+    function lockAdminPanel() {
+      sessionStorage.removeItem(STORAGE_KEYS.ADMIN_AUTH_SESSION);
+      document.getElementById("adminPassInput").value = "";
+      applyAdminUnlockedState(false);
+    }
+
+    function changeAdminPassword() {
+      const nextPass = document.getElementById("newAdminPassInput").value.trim();
+      if (!nextPass) { showAdminToast("اكتب كلمة المرور الجديدة"); return; }
+      localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, nextPass);
+      if (dbRef) dbRef.child("adminPass").set(nextPass).catch(() => {});
+      document.getElementById("newAdminPassInput").value = "";
+      showAdminToast("تم تغيير كلمة مرور الإدارة بنجاح ✅");
+    }
+
+    function toggleAdminTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem(STORAGE_KEYS.THEME, document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    function switchAdminTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tabId));
+      document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === tabId));
+    }
+
+    function toggleInlineEditor(boxId) {
+      const box = document.getElementById(boxId);
+      if (box) box.classList.toggle("open");
+    }
+
+    function getOrderCategoryLabel(secTitle, secType) {
+      const text = `${secTitle || ""} ${secType || ""}`.toLowerCase();
+      if (text.includes("بحث") || text.includes("research")) return "بحث";
+      return "تكليف";
+    }
+
+    function dedupeStudentsList(list) {
+      const map = new Map();
+      (Array.isArray(list) ? list : []).forEach((st) => {
+        if (!st) return;
+        const key = String(st.phone || st.username || st.card || "").trim() || ("STU-" + Math.random());
+        const existing = map.get(key);
+        if (!existing) {
+          map.set(key, st);
+        } else {
+          map.set(key, {
+            ...existing,
+            ...st,
+            isPro: Boolean(existing.isPro || st.isPro),
+            proCode: st.proCode || existing.proCode || ""
+          });
+        }
+      });
+      return Array.from(map.values());
+    }
+
+    function dedupeOrdersList(list) {
+      const seenIds = new Set();
+      const out = [];
+      (Array.isArray(list) ? list : []).forEach((ord) => {
+        if (!ord || !ord.id) return;
+        if (seenIds.has(ord.id)) return;
+        seenIds.add(ord.id);
+        out.push(ord);
+      });
+      return out;
+    }
+
+    function renderPresenceUI() {
+      const now = Date.now();
+      const entries = Object.entries(livePresenceMap || {}).filter(([, v]) => v && (now - (Number(v.lastSeen) || 0) < 90000));
+      const count = entries.length;
+      document.getElementById("realOnlineCountBadge").textContent = String(count);
+      document.getElementById("realOnlinePanelNum").textContent = String(count);
+
+      const listEl = document.getElementById("realOnlineUsersList");
+      if (!entries.length) {
+        listEl.innerHTML = "لا يوجد مستخدمون متصلون حالياً.";
+        return;
+      }
+      listEl.innerHTML = entries.map(([, info], idx) => `
+        <div style="padding:7px 11px; border-radius:14px; background:var(--surface-2); border:1px solid var(--border-soft); margin-bottom:6px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;">
+          <span><strong>${idx + 1}.</strong> ${esc(info.name || "زائر")}</span>
+          <span>${esc(info.page || "الرئيسية")} • منذ ${Math.max(1, Math.round((now - (Number(info.lastSeen) || now)) / 1000))} ث</span>
+        </div>
+      `).join("");
+    }
+
+    function cleanupStalePresence() {
+      if (!dbRef) { renderPresenceUI(); return; }
+      const now = Date.now();
+      Object.entries(livePresenceMap || {}).forEach(([sid, v]) => {
+        if (!v || (now - (Number(v.lastSeen) || 0) >= 90000)) {
+          dbRef.child("presence").child(sid).remove().catch(() => {});
+        }
+      });
+      renderPresenceUI();
+      showAdminToast("تم تحديث المتصلين");
+    }
+
+    function initFirebase() {
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        dbRef = firebase.database().ref("platform");
+        document.getElementById("fbSyncDot").classList.add("live");
+        document.getElementById("fbSyncLabel").textContent = "Firebase متصل";
+        dbRef.child("adminConnected").set(true).catch(() => {});
+
+        dbRef.child("presence").on("value", (snap) => {
+          livePresenceMap = snap.val() || {};
+          renderPresenceUI();
+        });
+
+        dbRef.on("value", (snap) => {
+          const val = snap.val();
+          if (!val) return;
+          if (typeof val.adminPass === "string" && val.adminPass.trim()) localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, val.adminPass.trim());
+          if (Array.isArray(val.orders)) localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(dedupeOrdersList(val.orders)));
+          if (Array.isArray(val.students)) localStorage.setItem(STORAGE_KEYS.STUDENTS_DB, JSON.stringify(dedupeStudentsList(val.students)));
+          if (Array.isArray(val.subjects) && val.subjects.length) localStorage.setItem(STORAGE_KEYS.SUBJECTS, JSON.stringify(val.subjects));
+          if (Array.isArray(val.sections) && val.sections.length) localStorage.setItem(STORAGE_KEYS.SECTIONS, JSON.stringify(val.sections));
+          if (val.subjectSections && typeof val.subjectSections === "object") localStorage.setItem(STORAGE_KEYS.SUBJECT_SECTIONS, JSON.stringify(val.subjectSections));
+          if (val.catalog) localStorage.setItem(STORAGE_KEYS.CATALOG, JSON.stringify(val.catalog));
+          if (val.whatsappCfg) localStorage.setItem(STORAGE_KEYS.WHATSAPP_CFG, JSON.stringify(val.whatsappCfg));
+          if (val.subscription) localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION, JSON.stringify(val.subscription));
+          if (Array.isArray(val.paymentMethods)) localStorage.setItem(STORAGE_KEYS.PAYMENT_METHODS, JSON.stringify(val.paymentMethods));
+          if (val.appearance) localStorage.setItem(STORAGE_KEYS.APPEARANCE, JSON.stringify(val.appearance));
+          if (val.transitionId) localStorage.setItem(STORAGE_KEYS.TRANSITION, val.transitionId);
+          if (Array.isArray(val.ads)) localStorage.setItem(STORAGE_KEYS.ADS, JSON.stringify(val.ads));
+          if (Array.isArray(val.support)) localStorage.setItem(STORAGE_KEYS.SUPPORT, JSON.stringify(val.support));
+          if (val.brand) localStorage.setItem(STORAGE_KEYS.BRAND, JSON.stringify(val.brand));
+          if (val.payments) localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(val.payments));
+          renderAllAdmin();
+        });
+      } catch (_) {
+        document.getElementById("fbSyncLabel").textContent = "تخزين محلي";
+      }
+    }
+
+    function getSubjects() { const s = safeParse(localStorage.getItem(STORAGE_KEYS.SUBJECTS), null); return Array.isArray(s) && s.length ? s : DEFAULT_SUBJECTS; }
+    function saveSubjects(list) { localStorage.setItem(STORAGE_KEYS.SUBJECTS, JSON.stringify(list)); if (dbRef) dbRef.child("subjects").set(list).catch(() => {}); }
+    function getGlobalSections() { const s = safeParse(localStorage.getItem(STORAGE_KEYS.SECTIONS), null); return Array.isArray(s) && s.length ? s : DEFAULT_SECTIONS; }
+    function getSubjectSectionsMap() {
+      const map = safeParse(localStorage.getItem(STORAGE_KEYS.SUBJECT_SECTIONS), null);
+      if (map && typeof map === "object") return map;
+      const initial = {};
+      getSubjects().forEach(sub => { initial[sub.id] = getGlobalSections().map(sec => ({ ...sec })); });
+      localStorage.setItem(STORAGE_KEYS.SUBJECT_SECTIONS, JSON.stringify(initial));
+      return initial;
+    }
+    function saveSubjectSectionsMap(map) { localStorage.setItem(STORAGE_KEYS.SUBJECT_SECTIONS, JSON.stringify(map)); if (dbRef) dbRef.child("subjectSections").set(map).catch(() => {}); }
+    function getSectionsForSubject(subId) {
+      const map = getSubjectSectionsMap();
+      if (!Array.isArray(map[subId])) { map[subId] = getGlobalSections().map(s => ({ ...s })); saveSubjectSectionsMap(map); }
+      return map[subId];
+    }
+
+    function addSubjectAdmin() {
+      const name = document.getElementById("newSubName").value.trim();
+      const icon = document.getElementById("newSubIcon").value.trim() || "📘";
+      const color = document.getElementById("newSubColor").value || "#2563eb";
+      const desc = document.getElementById("newSubDesc").value.trim();
+      if (!name) { showAdminToast("اكتب اسم المادة"); return; }
+      const newId = "sub-" + Date.now();
+      const list = [...getSubjects(), { id: newId, name, icon, color, desc }];
+      saveSubjects(list);
+      const map = getSubjectSectionsMap();
+      map[newId] = DEFAULT_SECTIONS.map(s => ({ ...s }));
+      saveSubjectSectionsMap(map);
+      document.getElementById("newSubName").value = "";
+      document.getElementById("newSubDesc").value = "";
+      renderSubjectsPageAdmin();
+      populateCatalogSelectors();
+      showAdminToast("تمت إضافة المادة ✅");
+    }
+
+    function addSectionToTargetSubject(subSelectId, titleInputId, typeSelectId, iconInputId, hintInputId) {
+      const targetSubId = document.getElementById(subSelectId).value;
+      const title = document.getElementById(titleInputId).value.trim();
+      const type = document.getElementById(typeSelectId).value;
+      const icon = document.getElementById(iconInputId).value.trim() || "📂";
+      const hint = document.getElementById(hintInputId).value.trim();
+      if (!targetSubId || !title) { showAdminToast("اختر المادة واكتب اسم القسم"); return; }
+      const map = getSubjectSectionsMap();
+      const currentList = Array.isArray(map[targetSubId]) ? [...map[targetSubId]] : getGlobalSections().map(s => ({ ...s }));
+      currentList.push({ id: "sec-" + Date.now(), title, icon, type, hint: hint || (SECTION_TYPE_LABELS[type] || "") });
+      map[targetSubId] = currentList;
+      saveSubjectSectionsMap(map);
+      document.getElementById(titleInputId).value = "";
+      document.getElementById(hintInputId).value = "";
+      renderSubjectsPageAdmin();
+      if (managedSubjectId) renderSingleSubjectSections();
+      populateCatalogSelectors();
+      showAdminToast("تمت إضافة القسم ✅");
+    }
+
+    function openSubjectManagePage(subId) {
+      managedSubjectId = subId;
+      const sub = getSubjects().find(s => s.id === subId);
+      if (!sub) return;
+      document.getElementById("subjectsOverviewPage").style.display = "none";
+      document.getElementById("singleSubjectManagePage").style.display = "block";
+      document.getElementById("managingSubjectBadge").textContent = `${sub.icon} إدارة مادة: ${sub.name}`;
+      document.getElementById("singleSubEditName").value = sub.name;
+      document.getElementById("singleSubEditIcon").value = sub.icon || "📘";
+      document.getElementById("singleSubEditColor").value = sub.color || "#2563eb";
+      document.getElementById("singleSubEditDesc").value = sub.desc || "";
+      document.getElementById("singleSubTargetSelect").innerHTML = getSubjects().map(s => `<option value="${esc(s.id)}" ${s.id === subId ? "selected" : ""}>${esc(s.name)}</option>`).join("");
+      renderSingleSubjectSections();
+    }
+
+    function closeSubjectManagePage() {
+      managedSubjectId = "";
+      document.getElementById("singleSubjectManagePage").style.display = "none";
+      document.getElementById("subjectsOverviewPage").style.display = "block";
+      renderSubjectsPageAdmin();
+    }
+
+    function saveSingleSubjectDetails() {
+      if (!managedSubjectId) return;
+      const name = document.getElementById("singleSubEditName").value.trim();
+      const icon = document.getElementById("singleSubEditIcon").value.trim() || "📘";
+      const color = document.getElementById("singleSubEditColor").value || "#2563eb";
+      const desc = document.getElementById("singleSubEditDesc").value.trim();
+      if (!name) return;
+      saveSubjects(getSubjects().map(s => s.id === managedSubjectId ? { ...s, name, icon, color, desc } : s));
+      document.getElementById("managingSubjectBadge").textContent = `${icon} إدارة مادة: ${name}`;
+      populateCatalogSelectors();
+      showAdminToast("تم حفظ تعديلات المادة ✅");
+    }
+
+    function deleteCurrentManagedSubject() {
+      if (!managedSubjectId) return;
+      saveSubjects(getSubjects().filter(s => s.id !== managedSubjectId));
+      const map = getSubjectSectionsMap();
+      delete map[managedSubjectId];
+      saveSubjectSectionsMap(map);
+      closeSubjectManagePage();
+      populateCatalogSelectors();
+      showAdminToast("تم حذف المادة");
+    }
+
+    function saveEditedSubjectSection(secId) {
+      if (!managedSubjectId) return;
+      const title = document.getElementById(`edit_subsec_title_${secId}`).value.trim();
+      const icon = document.getElementById(`edit_subsec_icon_${secId}`).value.trim() || "📂";
+      const type = document.getElementById(`edit_subsec_type_${secId}`).value;
+      const hint = document.getElementById(`edit_subsec_hint_${secId}`).value.trim();
+      if (!title) return;
+      const map = getSubjectSectionsMap();
+      map[managedSubjectId] = getSectionsForSubject(managedSubjectId).map(sec => sec.id === secId ? { ...sec, title, icon, type, hint } : sec);
+      saveSubjectSectionsMap(map);
+      renderSingleSubjectSections();
+      populateCatalogSelectors();
+      showAdminToast("تم حفظ تعديل القسم ✅");
+    }
+
+    function deleteSubjectSection(secId) {
+      if (!managedSubjectId) return;
+      const map = getSubjectSectionsMap();
+      map[managedSubjectId] = getSectionsForSubject(managedSubjectId).filter(sec => sec.id !== secId);
+      saveSubjectSectionsMap(map);
+      renderSingleSubjectSections();
+      populateCatalogSelectors();
+      showAdminToast("تم حذف القسم");
+    }
+
+    function renderSingleSubjectSections() {
+      if (!managedSubjectId) return;
+      const secs = getSectionsForSubject(managedSubjectId);
+      const wrap = document.getElementById("singleSubjectSectionsList");
+      if (!secs.length) { wrap.innerHTML = `<p style="color:var(--muted);">لا توجد أقسام.</p>`; return; }
+      wrap.innerHTML = secs.map((sec) => `
+        <div class="list-box">
+          <div class="row-head">
+            <div>
+              <strong>${esc(sec.icon)} ${esc(sec.title)}</strong>
+              <span style="font-size:12px; color:var(--primary); font-weight:800; margin-right:6px;">(${esc(SECTION_TYPE_LABELS[sec.type] || sec.type)})</span>
+              <div style="font-size:13px; color:var(--muted);">${esc(sec.hint || "")}</div>
+            </div>
+            <div class="row-actions">
+              <button type="button" class="btn btn-edit" onclick="toggleInlineEditor('edit_subsec_box_${escJs(sec.id)}')">✏️ تعديل</button>
+              <button type="button" class="btn btn-danger" onclick="deleteSubjectSection('${escJs(sec.id)}')">🗑️ حذف</button>
+            </div>
+          </div>
+          <div class="inline-edit-box" id="edit_subsec_box_${esc(sec.id)}">
+            <div class="grid-3">
+              <div class="form-group"><label>اسم القسم</label><input type="text" class="form-control" id="edit_subsec_title_${esc(sec.id)}" value="${esc(sec.title)}" /></div>
+              <div class="form-group">
+                <label>نوع المحتوى</label>
+                <select class="form-control" id="edit_subsec_type_${esc(sec.id)}">
+                  <option value="summaries" ${sec.type === "summaries" ? "selected" : ""}>ملخصات</option>
+                  <option value="text_note" ${sec.type === "text_note" ? "selected" : ""}>نص</option>
+                  <option value="purchasable" ${sec.type === "purchasable" ? "selected" : ""}>تكاليف</option>
+                  <option value="direct_link" ${sec.type === "direct_link" ? "selected" : ""}>لينك</option>
+                  <option value="exams" ${sec.type === "exams" ? "selected" : ""}>اختبارات التكوين</option>
+                  <option value="research" ${sec.type === "research" ? "selected" : ""}>بحث مطلوب</option>
+                </select>
+              </div>
+              <div class="form-group"><label>الأيقونة</label><input type="text" class="form-control" id="edit_subsec_icon_${esc(sec.id)}" value="${esc(sec.icon)}" /></div>
+            </div>
+            <div class="form-group"><label>وصف مختصر</label><input type="text" class="form-control" id="edit_subsec_hint_${esc(sec.id)}" value="${esc(sec.hint || "")}" /></div>
+            <button type="button" class="btn btn-wa" onclick="saveEditedSubjectSection('${escJs(sec.id)}')">💾 حفظ تعديل القسم</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderSubjectsPageAdmin() {
+      const subjects = getSubjects();
+      const quickSel = document.getElementById("quickAddSecTargetSubject");
+      if (quickSel) {
+        const prev = quickSel.value;
+        quickSel.innerHTML = subjects.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
+        if (prev && subjects.some(s => s.id === prev)) quickSel.value = prev;
+      }
+      document.getElementById("adminSubjectsList").innerHTML = subjects.map((sub) => {
+        const secs = getSectionsForSubject(sub.id);
+        return `
+          <div class="list-box subject-clickable" onclick="openSubjectManagePage('${escJs(sub.id)}')">
+            <div class="row-head">
+              <div>
+                <strong style="font-size:16.5px;">${esc(sub.icon)} ${esc(sub.name)}</strong>
+                <div style="font-size:13px; color:var(--muted);">${esc(sub.desc || "")}</div>
+                <div style="font-size:12.5px; color:var(--primary); font-weight:800; margin-top:4px;">الأقسام (${secs.length}): ${secs.map(x => x.title).join(" • ")}</div>
+              </div>
+              <button type="button" class="btn btn-edit" onclick="event.stopPropagation(); openSubjectManagePage('${escJs(sub.id)}')">✏️ فتح وإدارة</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function getCatalog() { return safeParse(localStorage.getItem(STORAGE_KEYS.CATALOG), {}); }
+    function saveCatalog(cat) { localStorage.setItem(STORAGE_KEYS.CATALOG, JSON.stringify(cat)); if (dbRef) dbRef.child("catalog").set(cat).catch(() => {}); }
+
+    function populateCatalogSelectors() {
+      const subSel = document.getElementById("itemSubjectSelect");
+      const secSel = document.getElementById("itemSectionSelect");
+      const subjects = getSubjects();
+      const prevSub = subSel.value;
+      subSel.innerHTML = subjects.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
+      if (prevSub && subjects.some(s => s.id === prevSub)) subSel.value = prevSub;
+
+      const updateSecs = () => {
+        const secs = getSectionsForSubject(subSel.value);
+        const prevSec = secSel.value;
+        secSel.innerHTML = secs.map(s => `<option value="${esc(s.id)}">${esc(s.title)}</option>`).join("");
+        if (prevSec && secs.some(s => s.id === prevSec)) secSel.value = prevSec;
+        renderCatalogListAdmin();
+      };
+      subSel.onchange = updateSecs;
+      secSel.onchange = renderCatalogListAdmin;
+      updateSecs();
+    }
+
+    function addCatalogItem() {
+      const subId = document.getElementById("itemSubjectSelect").value;
+      const secId = document.getElementById("itemSectionSelect").value;
+      const title = document.getElementById("itemTitleInput").value.trim();
+      const price = Number(document.getElementById("itemPriceInput").value) || 0;
+      const desc = document.getElementById("itemDescInput").value.trim();
+      const part2Text = document.getElementById("itemPart2Input").value.trim();
+      if (!title) { showAdminToast("اكتب العنوان"); return; }
+      const cat = getCatalog();
+      cat[subId] = cat[subId] || {};
+      cat[subId][secId] = cat[subId][secId] || [];
+      const secObj = getSectionsForSubject(subId).find(s => s.id === secId) || {};
+      cat[subId][secId].push({
+        id: "ITM-" + Date.now(), title, price, desc,
+        linkUrl: (secObj.type === "summaries" || secObj.type === "direct_link") ? desc : "",
+        part1Text: secObj.type === "exams" ? desc : "",
+        part2Text: secObj.type === "exams" ? part2Text : ""
+      });
+      saveCatalog(cat);
+      document.getElementById("itemTitleInput").value = "";
+      document.getElementById("itemDescInput").value = "";
+      document.getElementById("itemPart2Input").value = "";
+      renderCatalogListAdmin();
+      showAdminToast("تمت إضافة العنصر ✅");
+    }
+
+    function saveEditedCatalogItem(subId, secId, itemId) {
+      const title = document.getElementById(`edit_itm_title_${itemId}`).value.trim();
+      const price = Number(document.getElementById(`edit_itm_price_${itemId}`).value) || 0;
+      const desc = document.getElementById(`edit_itm_desc_${itemId}`).value.trim();
+      const part2Text = document.getElementById(`edit_itm_p2_${itemId}`).value.trim();
+      if (!title) return;
+      const secObj = getSectionsForSubject(subId).find(s => s.id === secId) || {};
+      const cat = getCatalog();
+      cat[subId] = cat[subId] || {};
+      cat[subId][secId] = (cat[subId][secId] || []).map(it => it.id === itemId ? {
+        ...it, title, price, desc,
+        linkUrl: (secObj.type === "summaries" || secObj.type === "direct_link") ? desc : (it.linkUrl || ""),
+        part1Text: secObj.type === "exams" ? desc : (it.part1Text || ""),
+        part2Text: secObj.type === "exams" ? part2Text : (it.part2Text || "")
+      } : it);
+      saveCatalog(cat);
+      renderCatalogListAdmin();
+      showAdminToast("تم حفظ التعديل ✅");
+    }
+
+    function deleteCatalogItem(subId, secId, itemId) {
+      const cat = getCatalog();
+      cat[subId] = cat[subId] || {};
+      cat[subId][secId] = (cat[subId][secId] || []).filter(i => i.id !== itemId);
+      saveCatalog(cat);
+      renderCatalogListAdmin();
+      showAdminToast("تم حذف العنصر");
+    }
+
+    function renderCatalogListAdmin() {
+      const subId = document.getElementById("itemSubjectSelect").value;
+      const secId = document.getElementById("itemSectionSelect").value;
+      const list = ((getCatalog()[subId] || {})[secId]) || [];
+      const wrap = document.getElementById("adminCatalogList");
+      if (!list.length) { wrap.innerHTML = `<p style="color:var(--muted);">لا توجد عناصر.</p>`; return; }
+      wrap.innerHTML = list.map((it) => `
+        <div class="list-box">
+          <div class="row-head">
+            <div><strong>${esc(it.title)}</strong><div style="font-size:13px; color:var(--muted);">${it.price ? `${it.price} جنيه • ` : ""}${esc(it.desc || it.linkUrl || "")}</div></div>
+            <div class="row-actions">
+              <button type="button" class="btn btn-edit" onclick="toggleInlineEditor('edit_itm_box_${escJs(it.id)}')">✏️ تعديل</button>
+              <button type="button" class="btn btn-danger" onclick="deleteCatalogItem('${escJs(subId)}', '${escJs(secId)}', '${escJs(it.id)}')">🗑️ حذف</button>
+            </div>
+          </div>
+          <div class="inline-edit-box" id="edit_itm_box_${esc(it.id)}">
+            <div class="grid-2">
+              <div class="form-group"><label>العنوان</label><input type="text" class="form-control" id="edit_itm_title_${esc(it.id)}" value="${esc(it.title)}" /></div>
+              <div class="form-group"><label>السعر</label><input type="number" min="0" class="form-control" id="edit_itm_price_${esc(it.id)}" value="${Number(it.price) || 0}" /></div>
+            </div>
+            <div class="form-group"><label>المحتوى</label><textarea class="form-control" id="edit_itm_desc_${esc(it.id)}">${esc(it.desc || it.linkUrl || "")}</textarea></div>
+            <div class="form-group"><label>النصف الثاني (Pro)</label><textarea class="form-control" id="edit_itm_p2_${esc(it.id)}">${esc(it.part2Text || "")}</textarea></div>
+            <button type="button" class="btn btn-wa" onclick="saveEditedCatalogItem('${escJs(subId)}', '${escJs(secId)}', '${escJs(it.id)}')">💾 حفظ</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function getOrders() { return dedupeOrdersList(safeParse(localStorage.getItem(STORAGE_KEYS.ORDERS), [])); }
+    function saveOrders(list) {
+      const clean = dedupeOrdersList(list);
+      localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(clean));
+      if (dbRef) dbRef.child("orders").set(clean).catch(() => {});
+    }
+
+    function clearAllOrdersAdmin() { saveOrders([]); renderOrdersAdmin(); showAdminToast("تم إفراغ الطلبات"); }
+    function updateOrderStage(orderId, stage) { saveOrders(getOrders().map(o => o.id === orderId ? { ...o, status: stage } : o)); showAdminToast("تم تحديث الحالة"); }
+    function toggleOrderPayment(orderId) { saveOrders(getOrders().map(o => o.id === orderId ? { ...o, paymentDone: !o.paymentDone } : o)); showAdminToast("تم تحديث حالة الدفع"); }
+
+    function saveItemSolutionLink(orderId, itemIdx) {
+      const input = document.getElementById(`sol_input_${orderId}_${itemIdx}`);
+      if (!input) return;
+      const linkVal = input.value.trim();
+      saveOrders(getOrders().map(o => {
+        if (o.id !== orderId) return o;
+        const items = Array.isArray(o.items) ? [...o.items] : [];
+        if (items[itemIdx]) items[itemIdx] = { ...items[itemIdx], solutionLink: linkVal };
+        return { ...o, items };
+      }));
+      renderOrdersAdmin();
+      showAdminToast("تم حفظ لينك الحل ✅");
+    }
+
+    function deleteOrderAdmin(orderId) { saveOrders(getOrders().filter(o => o.id !== orderId)); renderOrdersAdmin(); showAdminToast("تم حذف الأوردر"); }
+
+    function renderOrdersAdmin() {
+      const wrap = document.getElementById("adminOrdersList");
+      const orders = getOrders();
+      if (!orders.length) { wrap.innerHTML = `<p style="color:var(--muted);">لا توجد طلبات حالياً.</p>`; return; }
+
+      const chronologicalCombined = [...orders].reverse().filter(o => Boolean(o.isCombined));
+      const combinedNumberById = new Map();
+      chronologicalCombined.forEach((o, i) => combinedNumberById.set(o.id, o.combinedSerial || (i + 1)));
+
+      wrap.innerHTML = orders.map((ord) => {
+        const items = Array.isArray(ord.items) && ord.items.length
+          ? ord.items
+          : [{ itemTitle: ord.itemTitle, subjectName: ord.subjectName, sectionTitle: ord.sectionTitle, priceText: ord.priceText, solutionLink: ord.solutionLink || "" }];
+
+        const isCombined = Boolean(ord.isCombined || items.length > 1);
+        const combinedNum = combinedNumberById.get(ord.id) || ord.combinedSerial || 1;
+        const orderBadgeTitle = isCombined
+          ? `أوردر ${combinedNum} مجمع (${ord.id})`
+          : `${ord.id}`;
+
+        const itemsHtml = items.map((it, i) => {
+          const kindLabel = it.kindLabel || getOrderCategoryLabel(it.sectionTitle, "");
+          return `
+            <div class="order-item-row">
+              <div style="display:flex; justify-content:space-between; gap:8px; font-weight:800; font-size:14px;">
+                <span>${i + 1}. ${esc(kindLabel)}: ${esc(it.itemTitle)} (${esc(it.subjectName)} — ${esc(it.sectionTitle)})</span>
+                <span>${esc(it.priceText || "متاح")}</span>
+              </div>
+              <div class="solution-divider-box">
+                <div style="font-size:12.5px; font-weight:800; color:var(--primary);">حل ${esc(kindLabel)} رقم ${i + 1}:</div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <input type="url" class="form-control" style="flex:1; min-width:220px;" id="sol_input_${esc(ord.id)}_${i}" value="${esc(it.solutionLink || "")}" placeholder="لينك الحل الخاص بـ ${esc(kindLabel)} ${i + 1}..." />
+                  <button type="button" class="btn btn-wa" onclick="saveItemSolutionLink('${escJs(ord.id)}', ${i})">📎 حفظ الحل</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        const stageOpts = STAGES.map(st => `<option value="${st}" ${ord.status === st ? "selected" : ""}>${st}</option>`).join("");
+        return `
+          <div class="list-box">
+            <div class="row-head">
+              <strong style="font-size:16px;">${esc(orderBadgeTitle)} — ${esc(ord.studentName)}</strong>
+              <span style="font-weight:800; color:var(--accent);">الإجمالي: ${esc(ord.priceText || "")}</span>
+            </div>
+            <div class="detail-grid">
+              <div><strong>الفرقة:</strong> ${esc(ord.studentYear || "-")}</div>
+              <div><strong>الهاتف:</strong> ${esc(ord.studentPhone || "-")}</div>
+              <div><strong>الكارنيه:</strong> ${esc(ord.studentCard || "-")}</div>
+              <div><strong>طريقة الدفع:</strong> ${esc(ord.paymentMethod || "-")}</div>
+              <div><strong>الحالة:</strong> ${esc(ord.status || "تم الإرسال")}</div>
+              <div><strong>التاريخ:</strong> ${esc(ord.createdAt || "-")}</div>
+            </div>
+            ${itemsHtml}
+            <div class="row-actions" style="margin-top:12px; padding-top:10px; border-top:1.5px dashed var(--border-soft);">
+              <select class="form-control" style="width:auto; min-width:155px;" onchange="updateOrderStage('${escJs(ord.id)}', this.value)">${stageOpts}</select>
+              <button type="button" class="btn ${ord.paymentDone ? "btn-wa" : "btn-outline"}" onclick="toggleOrderPayment('${escJs(ord.id)}')">${ord.paymentDone ? "✅ تم تأكيد الدفع" : "تأكيد الدفع"}</button>
+              <button type="button" class="btn btn-danger" onclick="deleteOrderAdmin('${escJs(ord.id)}')">🗑️ حذف</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function getStudentsDb() { return dedupeStudentsList(safeParse(localStorage.getItem(STORAGE_KEYS.STUDENTS_DB), [])); }
+    function saveStudentsDb(list) {
+      const clean = dedupeStudentsList(list);
+      localStorage.setItem(STORAGE_KEYS.STUDENTS_DB, JSON.stringify(clean));
+      if (dbRef) dbRef.child("students").set(clean).catch(() => {});
+      const active = safeParse(localStorage.getItem(STORAGE_KEYS.ACTIVE_STUDENT), null);
+      if (active) {
+        const match = clean.find(s => s.username === active.username || String(s.phone).trim() === String(active.phone).trim());
+        if (match) localStorage.setItem(STORAGE_KEYS.ACTIVE_STUDENT, JSON.stringify(match));
+      }
+    }
+
+    function saveEditedStudentAdmin(username) {
+      const updated = getStudentsDb().map(st => {
+        if (st.username !== username) return st;
+        return {
+          ...st,
+          name: document.getElementById(`edit_st_name_${username}`).value.trim(),
+          gender: document.getElementById(`edit_st_gender_${username}`).value,
+          age: document.getElementById(`edit_st_age_${username}`).value.trim(),
+          year: document.getElementById(`edit_st_year_${username}`).value,
+          gov: document.getElementById(`edit_st_gov_${username}`).value.trim(),
+          city: document.getElementById(`edit_st_city_${username}`).value.trim(),
+          card: document.getElementById(`edit_st_card_${username}`).value.trim(),
+          phone: document.getElementById(`edit_st_phone_${username}`).value.trim(),
+          password: document.getElementById(`edit_st_pass_${username}`).value,
+          updatedAt: new Date().toLocaleString("ar-EG")
+        };
+      });
+      saveStudentsDb(updated);
+      renderStudentsAdmin();
+      showAdminToast("تم حفظ بيانات الطالب ✅");
+    }
+
+    function toggleStudentProAdmin(username) {
+      saveStudentsDb(getStudentsDb().map(s => {
+        if (s.username !== username) return s;
+        const nextPro = !s.isPro;
+        return { ...s, isPro: nextPro, proCode: nextPro ? (s.proCode || "ADMIN-PRO") : "" };
+      }));
+      renderStudentsAdmin();
+      showAdminToast("تم تحديث اشتراك Pro");
+    }
+
+    function deleteStudentAdmin(username) {
+      saveStudentsDb(getStudentsDb().filter(s => s.username !== username));
+      renderStudentsAdmin();
+      showAdminToast("تم حذف الطالب");
+    }
+
+    function renderStudentsAdmin() {
+      const students = getStudentsDb();
+      const wrap = document.getElementById("adminStudentsList");
+      if (!students.length) { wrap.innerHTML = `<p style="color:var(--muted);">لا يوجد طلاب مسجلون حالياً.</p>`; return; }
+      wrap.innerHTML = students.map((st) => `
+        <div class="list-box">
+          <div class="row-head">
+            <div>
+              <strong>${esc(st.name)} ${st.isPro ? '<span class="badge-pro">Pro 👑</span>' : ""}</strong>
+              <span style="font-size:12.5px; color:var(--primary); font-weight:800; margin-right:6px;">@${esc(st.username || "")}</span>
+            </div>
+            <div class="row-actions">
+              <button type="button" class="btn btn-edit" onclick="toggleInlineEditor('edit_st_box_${escJs(st.username)}')">✏️ تعديل</button>
+              <button type="button" class="btn btn-gold" onclick="toggleStudentProAdmin('${escJs(st.username)}')">${st.isPro ? "إلغاء Pro" : "تفعيل Pro 👑"}</button>
+              <button type="button" class="btn btn-danger" onclick="deleteStudentAdmin('${escJs(st.username)}')">🗑️ حذف</button>
+            </div>
+          </div>
+          <div class="detail-grid">
+            <div><strong>الاسم كما في الكارنيه:</strong> ${esc(st.name)}</div>
+            <div><strong>النوع:</strong> ${esc(st.gender)}</div>
+            <div><strong>السن:</strong> ${esc(st.age)} سنة</div>
+            <div><strong>الفرقة:</strong> ${esc(st.year)}</div>
+            <div><strong>المحافظة:</strong> ${esc(st.gov)}</div>
+            <div><strong>المدينة:</strong> ${esc(st.city)}</div>
+            <div><strong>رقم الكارنيه:</strong> ${esc(st.card)}</div>
+            <div><strong>رقم الهاتف:</strong> ${esc(st.phone)}</div>
+            <div><strong>كلمة المرور:</strong> ${esc(st.password)}</div>
+            <div><strong>كود Pro:</strong> ${esc(st.proCode || "-")}</div>
+            <div><strong>تاريخ الإنشاء:</strong> ${esc(st.createdAt || "-")}</div>
+            <div><strong>آخر تعديل:</strong> ${esc(st.updatedAt || st.createdAt || "-")}</div>
+          </div>
+          <div class="inline-edit-box" id="edit_st_box_${esc(st.username)}">
+            <div class="grid-2">
+              <div class="form-group"><label>الاسم</label><input type="text" class="form-control" id="edit_st_name_${esc(st.username)}" value="${esc(st.name)}" /></div>
+              <div class="form-group"><label>النوع</label><select class="form-control" id="edit_st_gender_${esc(st.username)}"><option value="ذكر" ${st.gender === "ذكر" ? "selected" : ""}>ذكر</option><option value="أنثى" ${st.gender === "أنثى" ? "selected" : ""}>أنثى</option></select></div>
+              <div class="form-group"><label>السن</label><input type="text" class="form-control" id="edit_st_age_${esc(st.username)}" value="${esc(st.age)}" /></div>
+              <div class="form-group"><label>الفرقة</label><input type="text" class="form-control" id="edit_st_year_${esc(st.username)}" value="${esc(st.year)}" /></div>
+              <div class="form-group"><label>المحافظة</label><input type="text" class="form-control" id="edit_st_gov_${esc(st.username)}" value="${esc(st.gov)}" /></div>
+              <div class="form-group"><label>المدينة</label><input type="text" class="form-control" id="edit_st_city_${esc(st.username)}" value="${esc(st.city)}" /></div>
+              <div class="form-group"><label>رقم الكارنيه</label><input type="text" class="form-control" id="edit_st_card_${esc(st.username)}" value="${esc(st.card)}" /></div>
+              <div class="form-group"><label>رقم الهاتف</label><input type="text" class="form-control" id="edit_st_phone_${esc(st.username)}" value="${esc(st.phone)}" /></div>
+              <div class="form-group"><label>كلمة المرور</label><input type="text" class="form-control" id="edit_st_pass_${esc(st.username)}" value="${esc(st.password)}" /></div>
+            </div>
+            <button type="button" class="btn btn-wa" onclick="saveEditedStudentAdmin('${escJs(st.username)}')">💾 حفظ التعديل</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function getSubscription() {
+      const s = safeParse(localStorage.getItem(STORAGE_KEYS.SUBSCRIPTION), null);
+      return { price: Number(s?.price) > 0 ? Number(s.price) : 100, codes: Array.isArray(s?.codes) ? s.codes : [] };
+    }
+    function saveSubscription(sub) { localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION, JSON.stringify(sub)); if (dbRef) dbRef.child("subscription").set(sub).catch(() => {}); }
+
+    function saveSubPriceAdmin() {
+      const price = Number(document.getElementById("subPriceInput").value) || 100;
+      saveSubscription({ ...getSubscription(), price });
+      renderSubAdmin();
+      showAdminToast("تم حفظ سعر الاشتراك ✅");
+    }
+
+    function addSubscriptionCodeAdmin() {
+      const raw = document.getElementById("newSubCodeInput").value.trim().toUpperCase();
+      if (!raw) { showAdminToast("اكتب الكود"); return; }
+      const sub = getSubscription();
+      if (!sub.codes.some(c => String(c.code).toUpperCase() === raw)) {
+        sub.codes.unshift({ code: raw, usedBy: "" });
+        saveSubscription(sub);
+      }
+      document.getElementById("newSubCodeInput").value = "";
+      renderSubAdmin();
+      showAdminToast("تمت إضافة الكود ✅");
+    }
+
+    function copyCodeText(codeStr) {
+      if (navigator.clipboard?.writeText) navigator.clipboard.writeText(codeStr).then(() => showAdminToast(`تم نسخ: ${codeStr}`)).catch(() => showAdminToast(codeStr));
+      else showAdminToast(codeStr);
+    }
+
+    function saveEditedSubCode(idx) {
+      const nextCode = document.getElementById(`edit_code_val_${idx}`).value.trim().toUpperCase();
+      if (!nextCode) return;
+      const sub = getSubscription();
+      if (sub.codes[idx]) sub.codes[idx].code = nextCode;
+      saveSubscription(sub);
+      renderSubAdmin();
+      showAdminToast("تم تعديل الكود ✅");
+    }
+
+    function deleteSubCode(idx) {
+      const sub = getSubscription();
+      sub.codes.splice(idx, 1);
+      saveSubscription(sub);
+      renderSubAdmin();
+      showAdminToast("تم حذف الكود");
+    }
+
+    function renderSubAdmin() {
+      const sub = getSubscription();
+      document.getElementById("subPriceInput").value = sub.price;
+      const usedCount = sub.codes.filter(c => c.usedBy).length;
+      document.getElementById("adminSubCodesSummary").textContent = `إجمالي الأكواد: ${sub.codes.length} • المستخدمة: ${usedCount} • المتبقية: ${sub.codes.length - usedCount}`;
+      document.getElementById("adminSubCodesList").innerHTML = sub.codes.map((c, idx) => `
+        <div class="list-box" style="margin-bottom:0; padding:10px;">
+          <div class="row-head">
+            <div>
+              <strong>${esc(c.code)}</strong>
+              <div style="font-size:12px; color:${c.usedBy ? "var(--danger)" : "var(--accent)"}; font-weight:800;">${c.usedBy ? `مستخدم بواسطة: ${esc(c.usedBy)}` : "متاح"}</div>
+            </div>
+            <div class="row-actions">
+              <button type="button" class="btn btn-outline" onclick="copyCodeText('${escJs(c.code)}')">📋 نسخ</button>
+              <button type="button" class="btn btn-edit" onclick="toggleInlineEditor('edit_code_box_${idx}')">✏️ تعديل</button>
+              <button type="button" class="btn btn-danger" onclick="deleteSubCode(${idx})">🗑️</button>
+            </div>
+          </div>
+          <div class="inline-edit-box" id="edit_code_box_${idx}">
+            <div style="display:flex; gap:8px;">
+              <input type="text" class="form-control" id="edit_code_val_${idx}" value="${esc(c.code)}" />
+              <button type="button" class="btn btn-wa" onclick="saveEditedSubCode(${idx})">💾 حفظ</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function getPaymentMethods() {
+      const pm = safeParse(localStorage.getItem(STORAGE_KEYS.PAYMENT_METHODS), null);
+      return Array.isArray(pm) && pm.length ? pm : DEFAULT_PAYMENT_METHODS;
+    }
+
+    function savePaymentMethods(list) {
+      localStorage.setItem(STORAGE_KEYS.PAYMENT_METHODS, JSON.stringify(list));
+      if (dbRef) dbRef.child("paymentMethods").set(list).catch(() => {});
+      const detailsMap = safeParse(localStorage.getItem(STORAGE_KEYS.PAYMENTS), {});
+      list.forEach(item => { detailsMap[item.id] = item.account || ""; });
+      localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(detailsMap));
+      if (dbRef) dbRef.child("payments").set(detailsMap).catch(() => {});
+    }
+
+    function addPaymentMethodAdmin() {
+      const label = document.getElementById("newPayLabelInput").value.trim();
+      const icon = document.getElementById("newPayIconInput").value.trim() || "💳";
+      const account = document.getElementById("newPayAccountInput").value.trim();
+      if (!label) { showAdminToast("اكتب اسم طريقة الدفع"); return; }
+      const list = [...getPaymentMethods(), { id: "pay-" + Date.now(), label, icon, account }];
+      savePaymentMethods(list);
+      document.getElementById("newPayLabelInput").value = "";
+      document.getElementById("newPayAccountInput").value = "";
+      renderPaymentMethodsAdmin();
+      showAdminToast("تمت إضافة طريقة الدفع ✅");
+    }
+
+    function saveEditedPaymentMethod(id) {
+      const label = document.getElementById(`edit_pay_label_${id}`).value.trim();
+      const icon = document.getElementById(`edit_pay_icon_${id}`).value.trim() || "💳";
+      const account = document.getElementById(`edit_pay_acc_${id}`).value.trim();
+      if (!label) return;
+      savePaymentMethods(getPaymentMethods().map(p => p.id === id ? { ...p, label, icon, account } : p));
+      renderPaymentMethodsAdmin();
+      showAdminToast("تم تعديل طريقة الدفع ✅");
+    }
+
+    function deletePaymentMethod(id) {
+      savePaymentMethods(getPaymentMethods().filter(p => p.id !== id));
+      renderPaymentMethodsAdmin();
+      showAdminToast("تم حذف طريقة الدفع");
+    }
+
+    function savePaymentNoteAdmin() {
+      const note = document.getElementById("payGeneralNoteInput").value.trim();
+      const detailsMap = safeParse(localStorage.getItem(STORAGE_KEYS.PAYMENTS), {});
+      detailsMap.note = note;
+      localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(detailsMap));
+      if (dbRef) dbRef.child("payments").set(detailsMap).catch(() => {});
+      showAdminToast("تم حفظ ملاحظة الدفع ✅");
+    }
+
+    function renderPaymentMethodsAdmin() {
+      const list = getPaymentMethods();
+      const detailsMap = safeParse(localStorage.getItem(STORAGE_KEYS.PAYMENTS), {});
+      document.getElementById("payGeneralNoteInput").value = detailsMap.note || "";
+      document.getElementById("adminPaymentMethodsList").innerHTML = list.map(p => `
+        <div class="list-box">
+          <div class="row-head">
+            <div>
+              <strong>${esc(p.icon)} ${esc(p.label)}</strong>
+              <div style="font-size:13px; color:var(--muted);">الحساب / التفاصيل: ${esc(p.account || detailsMap[p.id] || "-")}</div>
+            </div>
+            <div class="row-actions">
+              <button type="button" class="btn btn-edit" onclick="toggleInlineEditor('edit_pay_box_${escJs(p.id)}')">✏️ تعديل</button>
+              <button type="button" class="btn btn-danger" onclick="deletePaymentMethod('${escJs(p.id)}')">🗑️ حذف</button>
+            </div>
+          </div>
+          <div class="inline-edit-box" id="edit_pay_box_${esc(p.id)}">
+            <div class="grid-3">
+              <div class="form-group"><label>الاسم</label><input type="text" class="form-control" id="edit_pay_label_${esc(p.id)}" value="${esc(p.label)}" /></div>
+              <div class="form-group"><label>الأيقونة</label><input type="text" class="form-control" id="edit_pay_icon_${esc(p.id)}" value="${esc(p.icon)}" /></div>
+              <div class="form-group"><label>الرقم / التفاصيل</label><input type="text" class="form-control" id="edit_pay_acc_${esc(p.id)}" value="${esc(p.account || detailsMap[p.id] || "")}" /></div>
+            </div>
+            <button type="button" class="btn btn-wa" onclick="saveEditedPaymentMethod('${escJs(p.id)}')">💾 حفظ</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function getWhatsappCfg() {
+      const s = safeParse(localStorage.getItem(STORAGE_KEYS.WHATSAPP_CFG), null);
+      return { ...DEFAULT_WHATSAPP_CFG, ...(s && typeof s === "object" ? s : {}), whatsappEnabled: s && typeof s.whatsappEnabled === "boolean" ? s.whatsappEnabled : true };
+    }
+
+    function renderWhatsappForm() {
+      const cfg = getWhatsappCfg();
+      document.getElementById("waEnabledInput").checked = Boolean(cfg.whatsappEnabled);
+      document.getElementById("waPhoneInput").value = cfg.phone || DEFAULT_WHATSAPP_CFG.phone;
+      document.getElementById("waTemplateInput").value = cfg.template || DEFAULT_WHATSAPP_CFG.template;
+    }
+
+    function saveWhatsappSettings() {
+      const cfg = {
+        whatsappEnabled: document.getElementById("waEnabledInput").checked,
+        phone: document.getElementById("waPhoneInput").value.trim() || DEFAULT_WHATSAPP_CFG.phone,
+        template: document.getElementById("waTemplateInput").value
+      };
+      localStorage.setItem(STORAGE_KEYS.WHATSAPP_CFG, JSON.stringify(cfg));
+      if (dbRef) dbRef.child("whatsappCfg").set(cfg).catch(() => {});
+      showAdminToast("تم حفظ إعدادات الواتس ✅");
+    }
+
+    function renderAppearanceForm() {
+      const app = safeParse(localStorage.getItem(STORAGE_KEYS.APPEARANCE), { themeKey: "glass-crystal-blue", fontKey: "cairo" });
+      document.getElementById("appearanceThemeSelect").value = app.themeKey || "glass-crystal-blue";
+      document.getElementById("appearanceFontSelect").value = app.fontKey || "cairo";
+    }
+
+    function saveAppearanceAdmin() {
+      const app = { themeKey: document.getElementById("appearanceThemeSelect").value, fontKey: document.getElementById("appearanceFontSelect").value };
+      localStorage.setItem(STORAGE_KEYS.APPEARANCE, JSON.stringify(app));
+      if (dbRef) dbRef.child("appearance").set(app).catch(() => {});
+      showAdminToast("تم حفظ الثيم والخط ✅");
+    }
+
+    function resetOriginalFontAdmin() {
+      const currentApp = safeParse(localStorage.getItem(STORAGE_KEYS.APPEARANCE), { themeKey: "glass-crystal-blue", fontKey: "cairo" });
+      const app = { ...currentApp, fontKey: "cairo" };
+      document.getElementById("appearanceFontSelect").value = "cairo";
+      localStorage.setItem(STORAGE_KEYS.APPEARANCE, JSON.stringify(app));
+      if (dbRef) dbRef.child("appearance").set(app).catch(() => {});
+      showAdminToast("تم إرجاع الخط الأصلي (Cairo) ✅");
+    }
+
+    function selectTransitionAdmin(trId) {
+      localStorage.setItem(STORAGE_KEYS.TRANSITION, trId);
+      if (dbRef) dbRef.child("transitionId").set(trId).catch(() => {});
+      renderTransitionsGrid();
+      showAdminToast("تم تفعيل الانتقال ✅");
+    }
+
+    function renderTransitionsGrid() {
+      const activeTr = localStorage.getItem(STORAGE_KEYS.TRANSITION) || "tr-01";
+      document.getElementById("transitionsGrid").innerHTML = TRANSITION_EFFECTS.map((tr) => `
+        <div class="trans-card ${activeTr === tr.id ? "selected" : ""}" onclick="selectTransitionAdmin('${tr.id}')">
+          <span>${esc(tr.name)}</span>
+          <span>${activeTr === tr.id ? "✅" : "✨"}</span>
+        </div>
+      `).join("");
+    }
+
+    function updateLogoPreview() {
+      const imgUrl = document.getElementById("brandLogoImgInput").value.trim();
+      const txt = document.getElementById("brandLogoTextInput").value.trim() || "🎓";
+      const box = document.getElementById("adminLogoPreviewBox");
+      if (imgUrl && /^https?:\/\//i.test(imgUrl)) box.innerHTML = `<img src="${esc(imgUrl)}" alt="logo" />`;
+      else box.textContent = txt;
+    }
+
+    function renderBrandForm() {
+      const b = safeParse(localStorage.getItem(STORAGE_KEYS.BRAND), { name: "الطالب الجامعي", logoText: "🎓", logoImage: "" });
+      document.getElementById("brandNameInput").value = b.name || "الطالب الجامعي";
+      document.getElementById("brandLogoTextInput").value = b.logoText || "🎓";
+      document.getElementById("brandLogoImgInput").value = b.logoImage || "";
+      updateLogoPreview();
+    }
+
+    function saveLogoAndBrandAdmin() {
+      const brand = {
+        name: document.getElementById("brandNameInput").value.trim() || "الطالب الجامعي",
+        logoText: document.getElementById("brandLogoTextInput").value.trim() || "🎓",
+        logoImage: document.getElementById("brandLogoImgInput").value.trim()
+      };
+      localStorage.setItem(STORAGE_KEYS.BRAND, JSON.stringify(brand));
+      if (dbRef) dbRef.child("brand").set(brand).catch(() => {});
+      showAdminToast("تم حفظ اللوجو واسم المنصة ✅");
+    }
+
+    function getAds() { return safeParse(localStorage.getItem(STORAGE_KEYS.ADS), []); }
+    function saveAds(list) { localStorage.setItem(STORAGE_KEYS.ADS, JSON.stringify(list)); if (dbRef) dbRef.child("ads").set(list).catch(() => {}); }
+    function addAdAdmin() {
+      const badge = document.getElementById("adBadgeInput").value.trim() || "إعلان";
+      const title = document.getElementById("adTitleInput").value.trim();
+      const body = document.getElementById("adBodyInput").value.trim();
+      if (!title || !body) { showAdminToast("أدخل العنوان والنص"); return; }
+      saveAds([{ id: "AD-" + Date.now(), badge, title, body, bg: "linear-gradient(145deg, #0f766e, #059669)", active: true }, ...getAds()]);
+      document.getElementById("adBadgeInput").value = ""; document.getElementById("adTitleInput").value = ""; document.getElementById("adBodyInput").value = "";
+      renderAdsAdmin(); showAdminToast("تمت إضافة الإعلان ✅");
+    }
+    function saveEditedAdAdmin(id) {
+      const badge = document.getElementById(`edit_ad_badge_${id}`).value.trim() || "إعلان";
+      const title = document.getElementById(`edit_ad_title_${id}`).value.trim();
+      const body = document.getElementById(`edit_ad_body_${id}`).value.trim();
+      if (!title || !body) return;
+      saveAds(getAds().map(a => a.id === id ? { ...a, badge, title, body } : a));
+      renderAdsAdmin(); showAdminToast("تم حفظ التعديل ✅");
+    }
+    function deleteAdAdmin(id) { saveAds(getAds().filter(a => a.id !== id)); renderAdsAdmin(); showAdminToast("تم حذف الإعلان"); }
+    function renderAdsAdmin() {
+      const list = getAds();
+      document.getElementById("adminAdsList").innerHTML = list.length ? list.map(a => `
+        <div class="list-box">
+          <div class="row-head">
+            <div><strong>[${esc(a.badge)}] ${esc(a.title)}</strong><div style="font-size:13px; color:var(--muted);">${esc(a.body)}</div></div>
+            <div class="row-actions">
+              <button type="button" class="btn btn-edit" onclick="toggleInlineEditor('edit_ad_box_${escJs(a.id)}')">✏️ تعديل</button>
+              <button type="button" class="btn btn-danger" onclick="deleteAdAdmin('${escJs(a.id)}')">🗑️ حذف</button>
+            </div>
+          </div>
+          <div class="inline-edit-box" id="edit_ad_box_${esc(a.id)}">
+            <div class="grid-2">
+              <div class="form-group"><label>الشارة</label><input type="text" class="form-control" id="edit_ad_badge_${esc(a.id)}" value="${esc(a.badge)}" /></div>
+              <div class="form-group"><label>العنوان</label><input type="text" class="form-control" id="edit_ad_title_${esc(a.id)}" value="${esc(a.title)}" /></div>
+            </div>
+            <div class="form-group"><label>النص</label><textarea class="form-control" id="edit_ad_body_${esc(a.id)}">${esc(a.body)}</textarea></div>
+            <button type="button" class="btn btn-wa" onclick="saveEditedAdAdmin('${escJs(a.id)}')">💾 حفظ</button>
+          </div>
+        </div>
+      `).join("") : `<p style="color:var(--muted);">لا توجد إعلانات.</p>`;
+    }
+
+    function getSupport() { return safeParse(localStorage.getItem(STORAGE_KEYS.SUPPORT), []); }
+    function saveSupport(list) { localStorage.setItem(STORAGE_KEYS.SUPPORT, JSON.stringify(list)); if (dbRef) dbRef.child("support").set(list).catch(() => {}); }
+    function addSupportLinkAdmin() {
+      const label = document.getElementById("supLabelInput").value.trim();
+      const url = document.getElementById("supUrlInput").value.trim();
+      if (!label || !url) { showAdminToast("أدخل الاسم والرابط"); return; }
+      saveSupport([...getSupport(), { id: "SUP-" + Date.now(), label, url }]);
+      document.getElementById("supLabelInput").value = ""; document.getElementById("supUrlInput").value = "";
+      renderSupportAdmin(); showAdminToast("تمت إضافة الرابط ✅");
+    }
+    function saveEditedSupportAdmin(id) {
+      const label = document.getElementById(`edit_sup_label_${id}`).value.trim();
+      const url = document.getElementById(`edit_sup_url_${id}`).value.trim();
+      if (!label || !url) return;
+      saveSupport(getSupport().map(l => l.id === id ? { ...l, label, url } : l));
+      renderSupportAdmin(); showAdminToast("تم حفظ التعديل ✅");
+    }
+    function deleteSupportAdmin(id) { saveSupport(getSupport().filter(l => l.id !== id)); renderSupportAdmin(); showAdminToast("تم حذف الرابط"); }
+    function renderSupportAdmin() {
+      const list = getSupport();
+      document.getElementById("adminSupportList").innerHTML = list.length ? list.map(l => `
+        <div class="list-box">
+          <div class="row-head">
+            <div><strong>${esc(l.label)}</strong><div style="font-size:12.5px; color:var(--muted);">${esc(l.url)}</div></div>
+            <div class="row-actions">
+              <button type="button" class="btn btn-edit" onclick="toggleInlineEditor('edit_sup_box_${escJs(l.id)}')">✏️ تعديل</button>
+              <button type="button" class="btn btn-danger" onclick="deleteSupportAdmin('${escJs(l.id)}')">🗑️ حذف</button>
+            </div>
+          </div>
+          <div class="inline-edit-box" id="edit_sup_box_${esc(l.id)}">
+            <div class="grid-2">
+              <div class="form-group"><label>الاسم</label><input type="text" class="form-control" id="edit_sup_label_${esc(l.id)}" value="${esc(l.label)}" /></div>
+              <div class="form-group"><label>الرابط</label><input type="url" class="form-control" id="edit_sup_url_${esc(l.id)}" value="${esc(l.url)}" /></div>
+            </div>
+            <button type="button" class="btn btn-wa" onclick="saveEditedSupportAdmin('${escJs(l.id)}')">💾 حفظ</button>
+          </div>
+        </div>
+      `).join("") : `<p style="color:var(--muted);">لا توجد روابط دعم.</p>`;
+    }
+
+    function renderAllAdmin() {
+      renderPresenceUI();
+      renderOrdersAdmin();
+      renderSubjectsPageAdmin();
+      if (managedSubjectId) renderSingleSubjectSections();
+      populateCatalogSelectors();
+      renderStudentsAdmin();
+      renderSubAdmin();
+      renderPaymentMethodsAdmin();
+      renderWhatsappForm();
+      renderAppearanceForm();
+      renderTransitionsGrid();
+      renderBrandForm();
+      renderAdsAdmin();
+      renderSupportAdmin();
+    }
+
+    function esc(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+    function escJs(s) { return String(s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'"); }
+
+    if (localStorage.getItem(STORAGE_KEYS.THEME) === "dark") document.body.classList.add("dark");
+    applyAdminUnlockedState(sessionStorage.getItem(STORAGE_KEYS.ADMIN_AUTH_SESSION) === "1");
+    renderAllAdmin();
+    initFirebase();
+    setInterval(renderPresenceUI, 10000);
+  </script>
+</body>
+</html>
